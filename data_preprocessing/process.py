@@ -2,13 +2,17 @@ import json
 import os
 import pandas as pd
 from matplotlib import pyplot as plt
+from geopy.distance import vincenty
 
 
-def read_csv(file: str):
-    return pd.read_csv(file, header=None, sep=',', na_values=['null'], dtype={'lineId': str},
-                           names=['timestamp', 'lineId', 'direction', 'journeyId', 'timeFrame', 'vehicleJourneyId',
-                                  'operator', 'congestion', 'lon', 'lat', 'delay', 'blockId', 'vehicleId', 'stopId',
-                                  'atStop'])
+def read_csv(file: str, sep=',', header=None,
+             names=None):
+    if names is None:
+        names = ['timestamp', 'lineId', 'direction', 'journeyId', 'timeFrame', 'vehicleJourneyId',
+                 'operator', 'congestion', 'lon', 'lat', 'delay', 'blockId', 'vehicleId', 'stopId',
+                 'atStop']
+    return pd.read_csv(file, header=header, sep=sep, na_values=['null'], dtype={'lineId': str},
+                       names=names)
 
 
 def get_files(path):
@@ -22,13 +26,21 @@ def find_bus_line_with_id(path_dir: str, bus_line_id: str):
         f = path_dir + '/' + file
         # no head exist, using ',' as separator, rename the index, set null value as Na
         raw_data = read_csv(f)
-        raw_data.iteritems()
         for index, row in raw_data.iterrows():
             row_id = row['lineId']
             if bus_line_id == row_id:
                 print(row)
                 bus_line = bus_line.append(row)
     return bus_line
+
+
+def cal_distance(ne, cl):
+    """
+    :param ne: (lat, lon)
+    :param cl: (lat, lon)
+    :return: distance in meters
+    """
+    return vincenty(ne, cl, ellipsoid='WGS-84').meters
 
 
 def get_x_y(test_line: list):
@@ -42,11 +54,20 @@ def get_x_y(test_line: list):
     return lon_x, lat_y, journeyId, vehicleJourneyId
 
 
-def plot_trip_in_line(lon_x: list, lat_y: list, title: str, color='r'):
+def plot_trip_in_line(lon_x: list, lat_y: list, title='temp', color='r', style='line', file='tmp.png', show=True):
     plt.title(title)
     plt.xlabel('longitude')
     plt.ylabel('latitude')
-    plt.plot(lon_x, lat_y, c=color, marker='o', mec='k', mfc='w', linestyle=':')
+    if style == 'line':
+        plt.plot(lon_x, lat_y, c=color, marker='o', mec='k', mfc='w', linestyle=':')
+    else:
+        plt.scatter(lon_x, lat_y, c=color)
+    if show:
+        show_trip(file=file)
+
+
+def show_trip(file='tmp.png'):
+    plt.savefig(file)
     plt.show()
 
 
