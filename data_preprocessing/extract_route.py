@@ -1,5 +1,6 @@
 import dbhelper
 import json
+import os
 
 
 def get_stop_loc(stop_id: str, cursor):
@@ -59,11 +60,9 @@ def convert_to_timestamp(format_time: str):
     return int(split_time[0]) * 3600 + int(split_time[1]) * 60 + int(split_time[2])
 
 
-def get_routes():
+def extract_route_to_json():
     connection = dbhelper.connect()
     cursor = connection.cursor()
-    # extract separate trips from GTFS dataset, and create three temporary json files to check result
-    trips_json, stops_location_json = 'trips.json', 'stops_location.json'
     test_route_short_name = '15'
     trips, stops_location = {}, {}
     for shape_id in get_shapes_id(test_route_short_name, cursor):
@@ -83,9 +82,34 @@ def get_routes():
             trips[trip_id]['timestamp'].append(convert_to_timestamp(departure_time))
             trips[trip_id]['lon'].append(float(stops_location[stop_id][1]))
             trips[trip_id]['lat'].append(float(stops_location[stop_id][0]))
+    # remove redundant routes
+    trips_stops, trip_remove = {}, []
+    for trip_id, trip in trips.items():
+        start_stop = trip['stop_id'][0]
+        if start_stop not in trips_stops:
+            trips_stops[start_stop] = trip_id
+        else:
+            if len(trips[trip_id]['stop_id']) > len(trips[trips_stops[start_stop]]['stop_id']):
+                trip_remove.append(trips_stops[start_stop])
+            else:
+                trip_remove.append(trip_id)
+    for trip_id in trip_remove:
+        trips.pop(trip_id)
+    print(len(trips))
     with open(trips_json, 'w') as f:
         json.dump(trips, f, indent=2)
     with open(stops_location_json, 'w') as f:
         json.dump(stops_location, f, indent=2)
     return trips, stops_location
 
+
+def get_routes():
+    if os.path.exists(trips_json) and os.path.exists(stops_location_json):
+        trips, stops_location = json.load(open(trips_json)), json.load(open(stops_location_json))
+    else:
+        trips, stops_location = extract_route_to_json()
+    return trips, stops_location
+
+
+# extract separate trips from GTFS dataset, and create three temporary json files to check result
+trips_json, stops_location_json = 'trips.json', 'stops_location.json'
