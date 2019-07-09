@@ -2,9 +2,10 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
+
 import process
-from extract_route import get_routes
 import split_dataset
+from extract_route import get_routes
 
 
 def create_trip(lon, lat, timestamp, stop_id, primary):
@@ -57,7 +58,6 @@ root_stop = [temp[0] for temp in line15_stops]
 end_stop = [temp[-1] for temp in line15_stops]
 # choose one day data
 print('Total line before filtered:')
-missing = 0
 one_day_data = split_dataset.split('2013-01-07', '2013-01-07')
 trajectories = {}
 '''
@@ -65,7 +65,17 @@ index about one_day_data
 0: timestamp 3:journey_pattern_id 4:time_frame  5: vehicle_journey_id 
 8: lon 9:lat 11: block_id 12 vehicle_id 13 stop_id
 '''
-use_stop_id_filter, use_distance_filter, use_delta_filter, use_speed_filter = 1, 1, 1, 1
+
+use_stop_id_filter, use_distance_filter, use_delta_filter, use_speed_filter, use_length_filter, use_start_filter, use_accumulated_filter = 0,0,0,0,0,0,0
+'''
+- filter 1: stop id filter, if stop id that the bus hold is not in the line 15, then skip.
+- filter 2: distance filter, the distance which is between bus and bus stop, if the distance is too far(>1000 meters), then skip.
+- filter 3: delta time filter, if the delta time between the current bus timestamp and last bus timestamp is too high(>1000 seconds), then skip.
+- filter 4: speed filter, if the speed of bus is too high(>120km/h) or too low(<1km/h), then skip.
+- filter 5: accumulated distance filter, if the accumulated distance of bus is longer than the total distance of standard trip, then skip.
+- filter 6: if the final trajectory is too short(has less than 100 points), then remove the trajectory.
+- filter 7: only choose the route begin with a standard start stop, skip the trajectory that is not begin with a start stop. 
+'''
 for line in one_day_data:
     stop_id = line[13].split('.')[0]
     primary = str(line[12]) + '#' + str(line[3])
@@ -73,8 +83,10 @@ for line in one_day_data:
     if primary not in trajectories:
         trajectories[primary] = []
     # create trajectory
-    if stop_id in root_stop and (not trajectories[primary] or (trajectories[primary] and (stop_id != trajectories[primary][-1]['end_stop']
-                                            or trajectories[primary][-1]['stop'][-1] in root_stop))):
+    if stop_id in root_stop and (
+            not trajectories[primary] or (trajectories[primary] and (stop_id != trajectories[primary][-1]['end_stop']
+                                                                     or trajectories[primary][-1]['stop'][
+                                                                         -1] in root_stop))):
 
         trajectories[primary].append(create_trip(lon, lat, timestamp, stop_id, primary))
     elif trajectories[primary]:
@@ -88,10 +100,13 @@ for line in one_day_data:
         else:
             # if stop id is not in the route or missing, using the last position's stop id
             stop_id = stop_id if stop_id in abbr_stops_location else tmp['stop'][-1]
-            distance = float(process.cal_distance([float(line[9]), float(line[8])], abbr_stops_location[stop_id]))
+            stop_distance = float(process.cal_distance([float(line[9]), float(line[8])], abbr_stops_location[stop_id]))
             # filter 2: using distance to closet stop
-            if distance > 1000 and use_distance_filter:
+            if stop_distance > 1000 and use_distance_filter:
                 continue
+        # # for test
+        if tmp['travel_distance'][-1] + traveled_distance > 23000 and use_accumulated_filter:
+            continue
         # delta time filter
         if delta > 1000 and use_delta_filter:
             for trip_stop in line15_stops:
@@ -110,29 +125,35 @@ for line in one_day_data:
             tmp['travel_time'].append(round(tmp['travel_time'][-1] + delta, 3))
             tmp['travel_distance'].append(round(tmp['travel_distance'][-1] + traveled_distance, 2))
             speed = tmp['speed'][-1] if traveled_distance == 0 else speed
-            tmp['speed'].append(speed)  # km/h
             tmp['info'].append('travel time:{}s,travel distance:{}m,speed:{}km/h,stop id:{}'.
                                format(tmp['travel_time'][-1], tmp['travel_distance'][-1], speed, stop_id))
-print('Missed lines:', missing)
+            tmp['speed'].append(speed)  # km/h
+    elif not use_start_filter:
+        trajectories[primary].append(create_trip(lon, lat, timestamp, root_stop[0], primary))
+
 trajectories_filtered, count = {}, 0
 for v in trajectories.values():
     for t in v:
-        if len(t['lon']) > 100:
+        if len(t['lon']) < 100 and use_length_filter:
+            continue
+        else:
             if t['start_stop'] not in trajectories_filtered:
                 trajectories_filtered[t['start_stop']] = []
             trajectories_filtered[t['start_stop']].append(t)
             count += len(t['lon'])
+
 for start_stop, trajectory in trajectories_filtered.items():
     print('From {}, the number of trajectories:'.format(start_stop), len(trajectory))
 print('Total lines after filtered:', count)
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app.layout = html.Div([
-    html.Div([
-        html.H1('Travel from 6318'),
-        dcc.Graph(id='distance-time-6318', figure=get_figure('6318')),
-        html.H1('Travel from 6282'),
-        dcc.Graph(id='distance-time-6282', figure=get_figure('6282'))
-    ]),
-])
-app.run_server(debug=True)
+
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+# app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+# app.layout = html.Div([
+#     html.Div([
+#         html.H1('Travel from 6318'),
+#         dcc.Graph(id='distance-time-6318', figure=get_figure('6318')),
+#         html.H1('Travel from 6282'),
+#         dcc.Graph(id='distance-time-6282', figure=get_figure('6282'))
+#     ]),
+# ])
+# app.run_server(debug=True)
