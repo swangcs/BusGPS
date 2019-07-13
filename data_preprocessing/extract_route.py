@@ -1,6 +1,7 @@
-import dbhelper
 import json
 import os
+import process
+import dbhelper
 
 
 def get_stop_loc(stop_id: str, cursor):
@@ -60,20 +61,28 @@ def convert_to_timestamp(format_time: str):
     return int(split_time[0]) * 3600 + int(split_time[1]) * 60 + int(split_time[2])
 
 
-def extract_route_to_json():
+def extract_route_to_json(route_short_name='15', trips_json='trips.json', stops_location_json='stops_location.json'):
+    """
+    extract specific route from gtfs data
+    :param route_short_name: default value is 15
+    :param trips_json: default value is trips.json
+    :param stops_location_json: default value is stops_location.json
+    :return: trips and stops_location
+    """
     connection = dbhelper.connect()
     cursor = connection.cursor()
-    test_route_short_name = '15'
     trips, stops_location = {}, {}
-    for shape_id in get_shapes_id(test_route_short_name, cursor):
+    for shape_id in get_shapes_id(route_short_name, cursor):
         shape_id = shape_id[0]
         trip_id = get_trips_id(shape_id, cursor)[0][0]
-        trips[trip_id] = {'stop_id': [], 'lon': [], 'lat': [], 'travel_time': [], 'travel_distance': [], 'timestamp': []}
+        trips[trip_id] = {'stop_id': [], 'lon': [], 'lat': [], 'travel_time': [], 'travel_distance': [],
+                          'timestamp': []}
         for stop_id, departure_time, shape_dist_traveled in get_stops_id_using_trip_id(trip_id, cursor):
             if shape_dist_traveled == '0':
                 trips[trip_id]['travel_time'].append(0)
             else:
-                trips[trip_id]['travel_time'].append(convert_to_timestamp(departure_time) - trips[trip_id]['timestamp'][0])
+                trips[trip_id]['travel_time'].append(
+                    convert_to_timestamp(departure_time) - trips[trip_id]['timestamp'][0])
             if stop_id not in stops_location:
                 # stops location: (lat, lon)
                 stops_location[stop_id] = get_stop_loc(stop_id, cursor)[0]
@@ -95,21 +104,21 @@ def extract_route_to_json():
                 trip_remove.append(trip_id)
     for trip_id in trip_remove:
         trips.pop(trip_id)
-    print(len(trips))
-    with open(trips_json, 'w') as f:
-        json.dump(trips, f, indent=2)
-    with open(stops_location_json, 'w') as f:
-        json.dump(stops_location, f, indent=2)
+    process.dump_json(trips, trips_json)
+    process.dump_json(stops_location, stops_location_json)
     return trips, stops_location
 
 
-def get_routes():
+def get_route_info(route_short_name='15', trips_json='trips.json', stops_location_json='stops_location.json'):
+    """
+    get route information(trips and stops) with specific route short name
+    :param route_short_name: default value is '15'
+    :param trips_json: default is 'trips.json'
+    :param stops_location_json: default is 'stops_location.json'
+    :return: trips and stops_location
+    """
     if os.path.exists(trips_json) and os.path.exists(stops_location_json):
         trips, stops_location = json.load(open(trips_json)), json.load(open(stops_location_json))
     else:
-        trips, stops_location = extract_route_to_json()
+        trips, stops_location = extract_route_to_json(route_short_name, trips_json, stops_location_json)
     return trips, stops_location
-
-
-# extract separate trips from GTFS dataset, and create three temporary json files to check result
-trips_json, stops_location_json = 'trips.json', 'stops_location.json'

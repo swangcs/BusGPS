@@ -3,6 +3,12 @@ import pandas as pd
 
 
 def split(from_date, to_date):
+    """
+    split the dataset from a date to another date
+    :param from_date: start date
+    :param to_date: end date
+    :return: the dataset between these two date
+    """
     sql_split = "select * from public.traffic where time_frame between %s and %s order by timestamp; "
     connection = dbhelper.connect()
     cursor = connection.cursor()

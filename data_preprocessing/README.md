@@ -11,5 +11,9 @@ The directories is not exist in the git repository, all data should be imported 
 ### Files
 - [count.py](count.py): It count the total points of each bus line and the result is stored in the file [count.csv](count.csv) which has three columns: id, line_id, count.
 - [create_tables.sql](create_tables.sql): It will create tables which will be used in the following process. Run the script in the query tool.
-- [dbhelper.py](dbhelper.py): It is used to connect postgres database, and change configuration [here](config.ini)
-
+- [dbhelper.py](dbhelper.py): It is used to connect postgres database, and change configuration [here](config.ini).
+- [extract_route.py](extract_route.py): It is used to extract route which done by methods extract_route_to_json() and get_route_info().
+- [plot_route.py](plot_route.py): It plots standard route using dash and plotly. It includes *main* function here.
+- [process.py](process.py): It includes a set of basic functions.
+- [requirements.txt](requirements.txt): It includes the libraries that the project need to import.
+- [split_dataset.py](split_dataset.py): It splits dataset by start date and end date.
