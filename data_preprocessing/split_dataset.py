@@ -2,14 +2,15 @@ import dbhelper
 import pandas as pd
 
 
-def split(from_date, to_date):
+def split(from_date, to_date, line_id='15'):
     """
     split the dataset from a date to another date
+    :param line_id: default 15
     :param from_date: start date
     :param to_date: end date
     :return: the dataset between these two date
     """
-    sql_split = "select * from public.busgps where time_frame between %s and %s order by timestamp; "
+    sql_split = "select * from public.busgps where line_id='{}' and time_frame between %s and %s order by timestamp; ".format(line_id)
     connection = dbhelper.connect()
     cursor = connection.cursor()
     cursor.execute(sql_split, (from_date, to_date,))

@@ -20,13 +20,15 @@ The directories is not exist in the git repository, all data should be imported 
 - [create_tables.sql](create_tables.sql): It will create tables which will be used in the following process. Run the script in the query tool.
 - [dbhelper.py](dbhelper.py): It is used to connect postgres database, and change configuration [here](config.ini).
 - [extract_route.py](extract_route.py): It is used to extract route which done by methods extract_route_to_json() and get_route_info().
-- [plot_route.py](plot_route.py): It plots standard route using dash and plotly. It includes *main* function here.
+- [plot_route.py](plot_route.py): It plots standard route using dash and plotly.
 - [process.py](process.py): It includes a set of basic functions.
 - [requirements.txt](requirements.txt): It includes the libraries that the project need to import.
 - [split_dataset.py](split_dataset.py): It splits dataset by start date and end date.
 - [transform.py](transform.py): It transformed the raw GPS data to separate trajectories list with accumulated travel distance and accumulated time relationship.
+- [plot_trajectories](plot_trajectories.py): It plots trajectories using dash and plotly.
 
 ### Work
 - Run [count.py](count.py), get statical data about total points of each bus line.
-- Run [plot_route.py](plot_route.py), get standard traveled distance-time route table of bus line 15(you can change the value of route_short_name to get another route table).
-- Run [transform.py](transform.py), 
+- Run [plot_route.py](plot_route.py), plot standard accumulated traveled distance-time route table of bus line 15(you can change the value of route_short_name to get another route table).
+- Run [transform.py](transform.py), transform raw GPS data to separate trajectories with accumulated distance and time.
+- Run [plot_trajectories.py](plot_trajectories.py), plot change of accumulated traveled distance-time table of trajectories according to route_short_name(set '15' as default).
