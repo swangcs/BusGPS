@@ -42,7 +42,7 @@ if __name__ == '__main__':
     else:
         connector = connect()
         cursor = connector.cursor()
-        cursor.execute("select line_id, count(line_id) as count from traffic group by line_id order by count desc;")
+        cursor.execute("select line_id, count(line_id) as count from busGPS group by line_id order by count desc;")
         bus_line_count = cursor.fetchall()
         df = pandas.DataFrame(bus_line_count)
         df.to_csv('count.csv', header=['line_id', 'count'], sep=',')

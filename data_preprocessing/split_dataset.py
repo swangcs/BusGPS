@@ -9,7 +9,7 @@ def split(from_date, to_date):
     :param to_date: end date
     :return: the dataset between these two date
     """
-    sql_split = "select * from public.traffic where time_frame between %s and %s order by timestamp; "
+    sql_split = "select * from public.busGPS where time_frame between %s and %s order by timestamp; "
     connection = dbhelper.connect()
     cursor = connection.cursor()
     cursor.execute(sql_split, (from_date, to_date,))

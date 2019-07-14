@@ -1,5 +1,5 @@
 -- create tables using scripts and then insert csv file into postgres database
-CREATE TABLE traffic(timestamp bigint,line_id varchar(10), direction int,journey_pattern_id varchar(10),time_frame varchar(15),
+CREATE TABLE busGPS(timestamp bigint,line_id varchar(10), direction int,journey_pattern_id varchar(10),time_frame varchar(15),
 vehicle_journey_id int,operator varchar(5),congestion int,lon float, lat float,delay int,block_id int,vehicle_id int,stop_id varchar(10),at_stop int);
 create table trips(route_id varchar(20),service_id char(1),trip_id varchar(50),
 				   shape_id varchar(50),trip_headsign varchar(100),direction_id char(1));
