@@ -104,7 +104,12 @@ def extract_route_to_json(route_short_name='15', trips_json='trips.json', stops_
                 trip_remove.append(trip_id)
     for trip_id in trip_remove:
         trips.pop(trip_id)
-    process.dump_json(trips, trips_json)
+    trips_convert = {}
+    for trip in trips.values():
+        trip_id = trip['stop_id'][0][-4:]
+        print(trip_id)
+        trips_convert[trip_id] = trip
+    process.dump_json(trips_convert, trips_json)
     process.dump_json(stops_location, stops_location_json)
     return trips, stops_location
 
@@ -122,3 +127,4 @@ def get_route_info(route_short_name='15', trips_json='trips.json', stops_locatio
     else:
         trips, stops_location = extract_route_to_json(route_short_name, trips_json, stops_location_json)
     return trips, stops_location
+

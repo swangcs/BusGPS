@@ -26,9 +26,11 @@ The directories is not exist in the git repository, all data should be imported 
 - [split_dataset.py](split_dataset.py): It splits dataset by start date and end date.
 - [transform.py](transform.py): It transformed the raw GPS data to separate trajectories list with accumulated travel distance and accumulated time relationship.
 - [plot_trajectories](plot_trajectories.py): It plots trajectories using dash and plotly.
+- [prepare_training_set.py](prepare_training_set.py): It creates training sets for model training.
 
 ### Work
 - Run [count.py](count.py), get statical data about total points of each bus line.
 - Run [plot_route.py](plot_route.py), plot standard accumulated traveled distance-time route table of bus line 15(you can change the value of route_short_name to get another route table).
 - Run [transform.py](transform.py), transform raw GPS data to separate trajectories with accumulated distance and time.
 - Run [plot_trajectories.py](plot_trajectories.py), plot change of accumulated traveled distance-time table of trajectories according to route_short_name(set '15' as default).
+- Run [prepare_training_set.py](prepare_training_set.py), training sets will be stored in [training_sets.json](../model_training/training_sets.json), it records accumulated time every meter.
