@@ -5,27 +5,27 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
 
-import process
+import utils
 
 
 def get_figure(start_stop):
     return {
         'data': [
             go.Scatter(
-                x=test['travel_distance'],
-                y=test['travel_time'],
-                text=test['info'],
+                x=t['travel_distance'],
+                y=t['travel_time'],
+                text=t['info'],
                 mode='lines',
                 opacity=0.7,
                 marker={
                     'size': 15,
                     'line': {'width': 0.5, 'color': 'white'}
                 },
-                # name=test['name']
-            ) for test in trajectories[start_stop]],
+                name=t['name']
+            ) for t in trajectories[start_stop]],
         'layout': go.Layout(
-            xaxis={'title': 'Traveled distance'},
-            yaxis={'title': 'Traveled time'},
+            xaxis={'title': 'Traveled distance(in meters)'},
+            yaxis={'title': 'Traveled time(in seconds)'},
             margin={'l': 60, 'b': 40, 't': 10, 'r': 10},
             legend={'x': 0, 'y': -2, 'orientation': 'h'},
             hovermode='closest',
@@ -39,8 +39,8 @@ if __name__ == '__main__':
     if not os.path.exists(trajectories_json) or not os.path.exists(start_json):
         print('run transform.py first')
     else:
-        trajectories = process.load_json(trajectories_json)
-        start_stops = process.load_json(start_json)
+        trajectories = utils.load_json(trajectories_json)
+        start_stops = utils.load_json(start_json)
         point_count = []
         for values in trajectories.values():
             for trajectory in values:
