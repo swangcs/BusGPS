@@ -59,46 +59,100 @@ def split_route(data, line_id):
                 # filter 2: using distance to closet stop
                 if stop_distance > 1000 and use_distance_filter:
                     continue
-            # filter 5: accumulated distance filter
-            if tmp['travel_distance'][-1] + traveled_distance > 23000 and use_accumulated_filter:
-                continue
-            # filter 3: delta time filter
-            if delta > 1000 and use_delta_filter:
-                for trip_stop in route_stops:
-                    if tmp['stop'][-1] in trip_stop and trip_stop.index((tmp['stop'][-1])) < 3 and \
-                            stop_id in trip_stop and trip_stop.index(stop_id) < 10:
-                        trajectories[primary].append(
-                            create_trip(lon, lat, timestamp, root_stop[route_stops.index(trip_stop)], primary))
-            # filter 4: speed filter
-            elif (speed > 120 or speed < 1) and use_speed_filter:
-                continue
-            else:
-                tmp['lon'].append(lon)
-                tmp['lat'].append(lat)
-                tmp['stop'].append(stop_id)
-                tmp['timestamp'].append(timestamp)
-                tmp['travel_time'].append(round(tmp['travel_time'][-1] + delta, 3))
-                tmp['travel_distance'].append(round(tmp['travel_distance'][-1] + traveled_distance, 2))
-                speed = tmp['speed'][-1] if traveled_distance == 0 else speed
-                tmp['info'].append('travel time:{}s,travel distance:{}m,speed:{}km/h,stop id:{}'.
-                                   format(tmp['travel_time'][-1], tmp['travel_distance'][-1], speed, stop_id))
-                tmp['speed'].append(speed)  # km/h
-        #  filter 7: begin with a start stop
-        elif not use_start_filter:
-            trajectories[primary].append(create_trip(lon, lat, timestamp, root_stop[0], primary))
-    filtered, count = {}, 0
-    for v in trajectories.values():
-        for t in v:
-            # filter 6: remove short trajectories
-            if len(t['lon']) < 100 and use_length_filter:
-                continue
-            else:
-                if t['start_stop'] not in filtered:
-                    filtered[t['start_stop']] = []
-                filtered[t['start_stop']].append(t)
-                count += len(t['lon'])
-    print('Total lines after filtered:', count)
-    return filtered
+                if not len(trip_start_index) or (
+                        len(trip_start_index) and index - trip_start_index[-1]['index'] > length):
+                    trip_start_index.append(
+                        {'start': start_stop, 'current': stop, 'index': index, 'distance': distance_to_start})
+                else:
+                    tmp_index = trip_start_index[-1]['index']
+                    if distance_to_start < trip_start_index[-1]['distance'] or index - tmp_index > 5 \
+                            or travel_distance - trajectory['travel_distance'][tmp_index] < 5:
+                        trip_start_index[-1]['distance'] = distance_to_start
+                        trip_start_index[-1]['index'] = index
+        # extract trips
+        for trip_start in trip_start_index:
+            start_index = int(trip_start['index'])
+            current = trip_start_index.index(trip_start)
+            next_index = trip_start_index[current + 1]['index'] if current != len(trip_start_index) - 1 else len(
+                trajectory['lon'])
+            start_stop = trip_start['start']
+            route_stops = trips[start_stop]['stop_id']
+            maximum_travel_distance = trips[start_stop]['travel_distance'][-1]
+            for index in range(start_index, next_index):
+                lon, lat, timestamp, travel_time, travel_distance, stop, speed, info \
+                    = (trajectory['lon'][index], trajectory['lat'][index], trajectory['timestamp'][index],
+                       trajectory['travel_time'][index],
+                       trajectory['travel_distance'][index], trajectory['stop'][index], trajectory['speed'][index],
+                       trajectory['info'][index])
+                if index == start_index:
+                    trips_gps.append(
+                        {'lon': [], 'lat': [], 'timestamp': [], 'travel_time': [], 'travel_distance': [], 'stop': [],
+                         'speed': [], 'info': [], 'name': trajectory['name'], 'start': start_stop})
+                    add_point(trips_gps[-1], lon, lat, timestamp, 0, 0, route_stops.index(trip_start['start']), speed,
+                              info)
+                else:
+                    stop = route_stops.index(stop) if stop in route_stops else trips_gps[-1]['stop'][-1]
+                    if stop < len(route_stops) / 15:
+                        distance_to_start = utils.haversine(stops_location[start_stop], (lat, lon))
+                        if distance_to_start < trip_start['distance']:
+                            trip_start['distance'] = distance_to_start
+                            start_index = index
+                            trips_gps.remove(trips_gps[-1])
+                            trips_gps.append({'lon': [], 'lat': [], 'timestamp': [], 'travel_time': [],
+                                              'travel_distance': [], 'stop': [], 'speed': [], 'info': [],
+                                              'name': trajectory['name'], 'start': start_stop})
+                    travel_time = travel_time - trajectory['travel_time'][start_index]
+                    travel_distance = travel_distance - trajectory['travel_distance'][start_index]
+                    reached_end = False
+                    if stop > len(route_stops) - len(route_stops) / 30:
+                        if travel_distance > maximum_travel_distance - maximum_travel_distance * 0.01 and speed < 1 or speed == 0:
+                            reached_end = True
+                        distance_to_end = utils.haversine(stops_location[route_stops[-1]], (lat, lon))
+                        if distance_to_end < 100:
+                            reached_end = True
+                    if travel_distance > maximum_travel_distance + maximum_travel_distance * 0.005:
+                        reached_end = True
+                    if reached_end:
+                        add_point(trips_gps[-1], lon, lat, timestamp, travel_time, travel_distance, stop, speed, info)
+                        break
+                    else:
+                        add_point(trips_gps[-1], lon, lat, timestamp, travel_time, travel_distance, stop, speed, info)
+            if trips_gps[-1]['stop'][-1] < len(route_stops) - len(route_stops) / 10:
+                distance_to_end = utils.haversine(stops_location[route_stops[-1]],
+                                                  (trips_gps[-1]['lat'][-1], trips_gps[-1]['lon'][-1]))
+                if distance_to_end > 100 or len(trips_gps[-1]['lon']) < len(route_stops):
+                    trips_gps.remove(trips_gps[-1])
+    for trip in trips_gps:
+        point_count += len(trip['lon'])
+        # stop list check, this can be enhanced to the whole stop list
+        for index in range(len(trip['stop'])):
+            delta = trip['stop'][index] - trip['stop'][max(0, index - 1)]
+            if delta > len(trips[trip['start']]['stop_id']) / 10:
+                wrong_trips.append(trip)
+    for trip in wrong_trips:
+        point_count -= len(trip['lon'])
+        trips_gps.remove(trip)
+    print('The location of bus in total after filtered:', point_count)
+    print('The number of trips in total: ', len(trips_gps))
+    return trips_gps
+
+
+def compare(route_short_name='15'):
+    trips, stops_location = get_route_info(route_short_name=route_short_name,
+                                           trips_json='trips{}.json'.format(route_short_name),
+                                           stops_location_json='stops_location{}.json'.format(route_short_name))
+    # choose one day data
+    print('Total lines before filtered:')
+    one_day_data = split_dataset.select_one_day(route_short_name)
+    trajectories = extract_bus_route(one_day_data)
+    trips_gps = extract_trips(trajectories, trips, stops_location)
+    trips_sep = {}
+    for trip in trips_gps:
+        trip['id'] = trips_gps.index(trip)
+        if trip['start'] not in trips_sep:
+            trips_sep[trip['start']] = []
+        trips_sep[trip['start']].append(trip)
+    plot(trips_sep, trips, debug=False, x='travel_distance', y='travel_time')
 
 
 if __name__ == '__main__':
