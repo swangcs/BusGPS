@@ -1,6 +1,7 @@
 import numpy as np
 import utils
 from matplotlib import pyplot as plt
+from prepare_training_set import prepare
 
 
 def kern(tl, tl_m, b, var):
@@ -59,9 +60,8 @@ def training(all_sets: list, n, model, J=10, b=1):
 
 
 if __name__ == '__main__':
-    trajectories_length = utils.load_json('trajectories_length.json')
-    training_sets_all = utils.load_json('training_sets.json')
     model, step, J, b = 'kernel', 100, 10, 1
+    training_sets_all, trajectories_length = prepare(route_id='15', step=step)
     for start_stop, training_sets in training_sets_all.items():
         n = int(trajectories_length[start_stop] / step)
         print('Start stop:{},size:{}'.format(start_stop, len(training_sets)))

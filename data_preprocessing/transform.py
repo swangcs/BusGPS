@@ -53,7 +53,7 @@ def add_point(current, lon, lat, timestamp, travel_time, travel_distance, stop, 
     current['info'].append(info)
 
 
-def extract_trips(trajectories: list, trips: dict, stops_location: dict):
+def extract_trajectories(trajectories: list, trips: dict, stops_location: dict):
     trips_gps, wrong_trips, point_count = [], [], 0
     start_stops = list(trips.keys())
     length = max([len(trips[start_stop]['stop_id']) for start_stop in start_stops])
@@ -152,7 +152,7 @@ def extract_trips(trajectories: list, trips: dict, stops_location: dict):
     return trips_gps
 
 
-def compare(route_short_name='15'):
+def extract_trips(route_short_name='15'):
     trips, stops_location = get_route_info(route_short_name=route_short_name,
                                            trips_json='trips{}.json'.format(route_short_name),
                                            stops_location_json='stops_location{}.json'.format(route_short_name))
@@ -160,15 +160,13 @@ def compare(route_short_name='15'):
     print('Total lines before filtered:')
     one_day_data = split_dataset.select_one_day(route_short_name)
     trajectories = extract_bus_route(one_day_data)
-    trips_gps = extract_trips(trajectories, trips, stops_location)
+    trips_gps = extract_trajectories(trajectories, trips, stops_location)
     trips_sep = {}
     for trip in trips_gps:
         trip['id'] = trips_gps.index(trip)
         if trip['start'] not in trips_sep:
             trips_sep[trip['start']] = []
         trips_sep[trip['start']].append(trip)
-    plot(trips_sep, trips, debug=False, x='travel_distance', y='travel_time')
+    # plot(trips_sep, trips, debug=False, x='travel_distance', y='travel_time')
+    return trips_sep
 
-
-if __name__ == '__main__':
-    compare()
