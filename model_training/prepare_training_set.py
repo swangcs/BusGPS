@@ -5,8 +5,7 @@ from data_preprocessing import transform
 def prepare(route_id='15', step=100):
     # get training set
     trajectories_filtered = transform.extract_trips(route_short_name=route_id)
-    trips, stops_location = utils.get_route_info(route_short_name=route_id, trips_json='trips{}.json'.format(route_id),
-                                                 stops_location_json='stops_location{}.json'.format(route_id))
+    trips, stops_location = utils.get_route_info(route_short_name=route_id)
     trajectories_length, trajectories_timestamp, training_sets_all = {}, {}, {}
     for stop_id in trips.keys():
         if stop_id not in trajectories_timestamp:

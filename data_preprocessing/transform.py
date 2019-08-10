@@ -153,9 +153,7 @@ def extract_trajectories(trajectories: list, trips: dict, stops_location: dict):
 
 
 def extract_trips(route_short_name='15'):
-    trips, stops_location = get_route_info(route_short_name=route_short_name,
-                                           trips_json='trips{}.json'.format(route_short_name),
-                                           stops_location_json='stops_location{}.json'.format(route_short_name))
+    trips, stops_location = get_route_info(route_short_name=route_short_name)
     # choose one day data
     print('Total lines before filtered:')
     one_day_data = split_dataset.select_one_day(route_short_name)
