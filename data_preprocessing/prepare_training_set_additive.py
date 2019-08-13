@@ -1,4 +1,4 @@
-import data_preprocessing.process as process
+import process
 import numpy as np
 from pygam import LinearGAM, s, f, te
 from model_training.translation_timestamp import timeTrans
@@ -87,13 +87,13 @@ for i in range(len(trajectories_timestamp_start)):
             if i == 0:
                 X[i1 // 400+57 * i][4] = X[i1 // 400+57 * i][0]
             else:
-                X[i1 // 400+57 * i][4] = X[i1 // 400+57 * (i-1)][0]
+                X[i1 // 400+57 * i][4] = X[i1 // 400+57 * (i-1)][0]'''
 
 
 EAM_factors = np.transpose([X[:, 1], X[:, 2], X[:, 3], X[:, 4]])
 EAM_time = np.transpose([X[:, 0]])
-np.savetxt('/Users/letv/Desktop/EAM_factors.txt', X)
-np.savetxt("/Users/letv/Desktop/train.txt", trajectories_timestamp_start)'''
+np.save('EAM_factors.npy', EAM_factors)
+np.save('EAM_time.npy', EAM_time)
 
 
 
