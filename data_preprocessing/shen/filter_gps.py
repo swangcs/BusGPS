@@ -106,12 +106,13 @@ def split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info):
         new_group["dDistance"] = haversine(cur_loc, next_loc)
         small_groups = []
         if len(time_flags) > 0:
+            time_flags.append(new_group.shape[0])
             start = 0
             for i in time_flags:
-                df_tmp = new_group.iloc[start:i]
+                df_tmp = new_group.iloc[start:i].copy().reset_index(drop=True)
+                df_tmp.at[0, "dDistance"] = 0.0
                 small_groups.append(df_tmp)
                 start = i
-            small_groups.append(new_group[start:])
         else:
             small_groups = [new_group]
 
@@ -154,9 +155,9 @@ def split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info):
 
 
 def main():
-    home_dir = "/Users/ruixinhua/Documents/BusGPS/BusGPS/"
+    home_dir = "/Users/shenwang/Documents/datasets/dublin_bus/"
     # input
-    bus_line_number = "15"
+    bus_line_number = "145"
     def_trips_dir = home_dir + "processed/def_trips/" + bus_line_number + "/"
     groupby_labels = ["vehicle", "vehicle_journey"]
     thresh_time = 900  # seconds
