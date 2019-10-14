@@ -1,7 +1,10 @@
 import json
 import os
-import process
+import utils
 import dbhelper
+import pandas as pd
+from geopy.distance import vincenty
+import math
 
 
 def get_stop_loc(stop_id: str, cursor):
@@ -83,14 +86,15 @@ def extract_route_to_json(route_short_name='15', trips_json='trips.json', stops_
             else:
                 trips[trip_id]['travel_time'].append(
                     convert_to_timestamp(departure_time) - trips[trip_id]['timestamp'][0])
-            if stop_id not in stops_location:
+            stop_id_nor = stop_id[-4:] if stop_id[-4] != '0' else stop_id[-3:]
+            if stop_id_nor not in stops_location:
                 # stops location: (lat, lon)
-                stops_location[stop_id] = get_stop_loc(stop_id, cursor)[0]
-            trips[trip_id]['stop_id'].append(stop_id)
+                stops_location[stop_id_nor] = get_stop_loc(stop_id, cursor)[0]
+            trips[trip_id]['stop_id'].append(stop_id_nor)
             trips[trip_id]['travel_distance'].append(float(shape_dist_traveled))
             trips[trip_id]['timestamp'].append(convert_to_timestamp(departure_time))
-            trips[trip_id]['lon'].append(float(stops_location[stop_id][1]))
-            trips[trip_id]['lat'].append(float(stops_location[stop_id][0]))
+            trips[trip_id]['lon'].append(float(stops_location[stop_id_nor][1]))
+            trips[trip_id]['lat'].append(float(stops_location[stop_id_nor][0]))
     # remove redundant routes
     trips_stops, trip_remove = {}, []
     for trip_id, trip in trips.items():
@@ -106,11 +110,9 @@ def extract_route_to_json(route_short_name='15', trips_json='trips.json', stops_
         trips.pop(trip_id)
     trips_convert = {}
     for trip in trips.values():
-        trip_id = trip['stop_id'][0][-4:]
-        print(trip_id)
-        trips_convert[trip_id] = trip
-    process.dump_json(trips_convert, trips_json)
-    process.dump_json(stops_location, stops_location_json)
+        trips_convert[trip['stop_id'][0]] = trip
+    utils.dump_json(trips_convert, trips_json)
+    utils.dump_json(stops_location, stops_location_json)
     return trips, stops_location
 
 
@@ -128,3 +130,46 @@ def get_route_info(route_short_name='15', trips_json='trips.json', stops_locatio
         trips, stops_location = extract_route_to_json(route_short_name, trips_json, stops_location_json)
     return trips, stops_location
 
+
+def cal_distance(ne, cl):
+    """
+    :param ne: (lat, lon)
+    :param cl: (lat, lon)
+    :return: distance in meters
+    """
+    return vincenty(ne, cl, ellipsoid='WGS-84').meters
+
+
+def read_csv(file: str, sep=',', header=None, names=None):
+    if names is None:
+        names = ['timestamp', 'lineId', 'direction', 'journeyId', 'timeFrame', 'vehicleJourneyId',
+                 'operator', 'congestion', 'lon', 'lat', 'delay', 'blockId', 'vehicleId', 'stopId',
+                 'atStop']
+    return pd.read_csv(file, header=header, sep=sep, na_values=['null'], dtype={'lineId': str},
+                       names=names)
+
+
+def load_json(json_file):
+    with open(json_file) as f:
+        return json.load(f)
+
+
+def dump_json(data, json_file):
+    with open(json_file, 'w') as f:
+        json.dump(data, f, indent=2)
+
+
+def haversine(coord1, coord2):
+    # for quick calculation
+    R = 6372800  # Earth radius in meters
+    lat1, lon1 = coord1
+    lat2, lon2 = coord2
+    lat1, lat2, lon1, lon2 = float(lat1), float(lat2), float(lon1), float(lon2)
+
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+
+    return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))

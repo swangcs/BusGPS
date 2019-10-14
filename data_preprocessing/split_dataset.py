@@ -24,8 +24,17 @@ def to_csv(dataset, filename):
     df.to_csv(filename, index=None, header=False)
 
 
-# select_one_day = split('2013-01-07', '2013-01-07')
-# to_csv(select_one_day, 'one_day.csv')
-# select_one_week = split('2013-01-07', '2013-01-13')
-# select_one_month = split('2013-01-01', '2013-01-31')
-# select_two_month = split('2012-11-05', '2013-01-31')
+def select_one_day(line_id='15'):
+    return split('2013-01-07', '2013-01-07', line_id)
+
+
+def select_one_week(line_id='15'):
+    return split('2013-01-07', '2013-01-13', line_id)
+
+
+def select_one_month(line_id='15'):
+    return split('2013-01-01', '2013-01-31', line_id)
+
+
+def select_two_month(line_id='15'):
+    return split('2012-11-05', '2013-01-31', line_id)

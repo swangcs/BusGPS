@@ -1,4 +1,4 @@
-from extract_route import get_route_info
+from utils import get_route_info
 import dash
 import dash_core_components as dcc
 import dash_html_components as html

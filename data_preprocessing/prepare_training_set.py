@@ -1,10 +1,10 @@
-import process
+import utils
 
 
 # get training set
-start_stops = process.load_json('start_stops.json')
-trajectories_filtered = process.load_json('trajectories.json')
-trips = process.load_json('trips.json')
+start_stops = utils.load_json('start_stops.json')
+trajectories_filtered = utils.load_json('trajectories.json')
+trips = utils.load_json('trips.json')
 trajectories_length = {}
 trajectories_timestamp = {}
 for stop_id in start_stops:
@@ -29,6 +29,6 @@ for start_stop, trajectories_list in trajectories_timestamp.items():
                 if delta_distance > 0:
                     real_pointer += 1
 model_dir = '../model_training/'
-process.dump_json(trajectories_timestamp, '{}training_sets.json'.format(model_dir))
-process.dump_json(trajectories_length, '{}trajectories_length.json'.format(model_dir))
-process.dump_json(start_stops, '{}start_stops.json'.format(model_dir))
+utils.dump_json(trajectories_timestamp, '{}training_sets.json'.format(model_dir))
+utils.dump_json(trajectories_length, '{}trajectories_length.json'.format(model_dir))
+utils.dump_json(start_stops, '{}start_stops.json'.format(model_dir))
