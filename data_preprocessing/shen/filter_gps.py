@@ -138,7 +138,7 @@ def split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info):
                 d_dist = haversine(od_loc[1], (end_loc["lat"], end_loc["lon"]))
 
                 # step 4. remove trips that are too short, or too far from both ends.
-                if o_dist < dist/6.0 and d_dist < dist/6.0:
+                if o_dist < 300 and d_dist < 300:
                     #  the GPS points at both ends should be within 1/6 of total trip distance
                     group_time = each_group["dTime"].sum(skipna=True)
                     group_dist = each_group["dDistance"].sum(skipna=True)
