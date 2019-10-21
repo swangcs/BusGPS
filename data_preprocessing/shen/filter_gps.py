@@ -17,7 +17,7 @@ def load_gps(gps_path, columns, bus_line_number):
     :param bus_line_number: the bus line number you want to study
     :return: filtered dataframe
     """
-    df_gps = pd.read_csv(gps_path, names=columns)
+    df_gps = pd.read_csv(gps_path, names=columns, dtype=str)
     return df_gps.loc[df_gps["line"] == bus_line_number, ["time", "lon", "lat", "vehicle", "vehicle_journey"]]
 
 
