@@ -134,6 +134,8 @@ def split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info):
                         # direction matched when cosine is positive
                         gps_trip_name += ("_"+key)
                         dist, duration, _, od_loc = value
+                if not od_loc:
+                    continue
                 o_dist = haversine(od_loc[0], (first_loc["lat"], first_loc["lon"]))
                 d_dist = haversine(od_loc[1], (end_loc["lat"], end_loc["lon"]))
 
