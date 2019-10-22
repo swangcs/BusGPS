@@ -17,7 +17,7 @@ def load_gps(gps_path, columns, bus_line_number):
     :param bus_line_number: the bus line number you want to study
     :return: filtered dataframe
     """
-    df_gps = pd.read_csv(gps_path, names=columns, dtype=str)
+    df_gps = pd.read_csv(gps_path, names=columns, dtype={"line": str})
     return df_gps.loc[df_gps["line"] == bus_line_number, ["time", "lon", "lat", "vehicle", "vehicle_journey"]]
 
 
@@ -163,13 +163,13 @@ def main():
     def_trips_dir = home_dir + "processed/def_trips/" + bus_line_number + "/"
     groupby_labels = ["vehicle", "vehicle_journey"]
     thresh_time = 900  # seconds
-    gps_path = home_dir + "gps/Nov2012/siri.20121121.csv"
+    gps_path = home_dir + "gps/Jan2013/siri.20130117.csv.gz"
     def_trips_info = get_def_trip_info(def_trips_dir)
     columns = ["time", "line", "direction", "journey_pattern", "date", "vehicle_journey", "operator", "congestion",
                "lon", "lat", "delay", "block", "vehicle", "stop", "at_stop"]
 
     # output
-    gps_trips_dir = home_dir + "processed/gps_trips/" + bus_line_number + "/"
+    gps_trips_dir = home_dir + "processed/gps_trips/Jan/" + bus_line_number + "/"
     if not os.path.exists(gps_trips_dir):
         # create if not exists
         os.mkdir(gps_trips_dir)
