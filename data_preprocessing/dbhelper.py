@@ -10,11 +10,11 @@ def connect():
     cf = configparser.ConfigParser()
     cf.read("config.ini")
     try:
-        connection = psycopg2.connect(user="postgres",
-                                      password="postgres",
-                                      host="127.0.0.1",
-                                      port="5432",
-                                      database="BusGPS"
+        connection = psycopg2.connect(user=cf.get('postgres', 'user'),
+                                      password=cf.get('postgres', 'password'),
+                                      host=cf.get('postgres', 'host'),
+                                      port=cf.get('postgres', 'port'),
+                                      database=cf.get('postgres', 'database')
                                       )
         return connection
     except (Exception, psycopg2.Error) as error:

@@ -44,3 +44,11 @@ def kernel_predict(test_set_known, training_sets, training_sets_variance):
     predict_set = np.append(tl, tl[-1] + np.sum(np.multiply(kern_weight[:, np.newaxis], delta_time), axis=0) / np.sum(kern_weight))
     return predict_set
 
+<<<<<<< Updated upstream
+=======
+def KNN_predict(test_set_down, training_set, training_sets_variance):
+
+def AMM_predict(test_set_down, training_set):
+
+def LR_predict(test_set_down, training)
+>>>>>>> Stashed changes

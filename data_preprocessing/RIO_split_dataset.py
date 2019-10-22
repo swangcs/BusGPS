@@ -10,7 +10,7 @@ def split(from_date, to_date, line_id='121'):
     :param to_date: end date
     :return: the dataset between these two date
     """
-    sql_split = "select * from public.busgps where line_id='{}' and time_frame between %s and %s order by timestamp; ".format(line_id)
+    sql_split = "select * from busgps where line_id='{}' and time_frame between %s and %s order by timestamp; ".format(line_id)
     connection = dbhelper.connect()
     cursor = connection.cursor()
     cursor.execute(sql_split, (from_date, to_date,))
@@ -24,18 +24,24 @@ def to_csv(dataset, filename):
     df.to_csv(filename, index=None, header=False)
 
 
-def select_one_day(line_id='15'):
-    return split('2013-9-26', '2013-09-26', line_id)
+def select_one_day(line_id='121'):
+    return split('2013-09-26', '2013-09-26', line_id)
 
 
-def select_one_week(line_id='15'):
+def select_one_week(line_id='121'):
     return split('2013-09-26', '2013-10-02', line_id)
 
 
-def select_one_month(line_id='15'):
+def select_one_month(line_id='121'):
     return split('2013-10-01', '2013-10-31', line_id)
 
 
-def select_two_month(line_id='15'):
+def select_two_month(line_id='121'):
     return split('2013-10-01', '2013-11-30', line_id)
+
+
+# select_one_day(line_id='121')
+# select_one_week(line_id='121')
+# one_month_data = select_one_month(line_id='121')
+
 

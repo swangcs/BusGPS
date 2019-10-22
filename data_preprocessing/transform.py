@@ -1,9 +1,7 @@
 import numpy as np
-
-import split_dataset
-import utils
-from plot_trajectories import plot
-from utils import get_route_info
+from data_preprocessing.utils import get_route_info
+import data_preprocessing.split_dataset as split_dataset
+import data_preprocessing.utils as utils
 
 
 def extract_bus_route(data):
