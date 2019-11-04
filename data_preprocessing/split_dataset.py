@@ -1,11 +1,11 @@
-import dbhelper
+import data_preprocessing.dbhelper as dbhelper
 import pandas as pd
 
 
-def split(from_date, to_date, line_id='15'):
+def split(from_date, to_date, line_id='121'):
     """
     split the dataset from a date to another date
-    :param line_id: default 15
+    :param line_id: default 121
     :param from_date: start date
     :param to_date: end date
     :return: the dataset between these two date
@@ -24,8 +24,18 @@ def to_csv(dataset, filename):
     df.to_csv(filename, index=None, header=False)
 
 
-# select_one_day = split('2013-01-07', '2013-01-07')
-# to_csv(select_one_day, 'one_day.csv')
-# select_one_week = split('2013-01-07', '2013-01-13')
-# select_one_month = split('2013-01-01', '2013-01-31')
-# select_two_month = split('2012-11-05', '2013-01-31')
+def select_one_day(line_id='15'):
+    return split('2013-9-26', '2013-09-26', line_id)
+
+
+def select_one_week(line_id='15'):
+    return split('2013-09-26', '2013-10-02', line_id)
+
+
+def select_one_month(line_id='15'):
+    return split('2013-10-01', '2013-10-31', line_id)
+
+
+def select_two_month(line_id='15'):
+    return split('2013-10-01', '2013-11-30', line_id)
+

@@ -1,4 +1,4 @@
-from extract_route import get_route_info
+from utils import get_route_info
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -9,7 +9,7 @@ if __name__ == '__main__':
     '''
     plot route on local server
     '''
-    trips, stops_location = get_route_info(route_short_name='15')
+    trips, stops_location = get_route_info(route_short_name='121')
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
     app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
     app.layout = html.Div([
