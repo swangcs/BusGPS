@@ -9,7 +9,7 @@ if __name__ == '__main__':
     '''
     plot route on local server
     '''
-    trips, stops_location = get_route_info(route_short_name='15')
+    trips, stops_location = get_route_info(route_short_name='121')
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
     app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
     app.layout = html.Div([

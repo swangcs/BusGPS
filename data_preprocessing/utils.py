@@ -1,6 +1,5 @@
 import json
 import os
-import utils
 import dbhelper
 import pandas as pd
 from geopy.distance import vincenty
@@ -64,12 +63,10 @@ def convert_to_timestamp(format_time: str):
     return int(split_time[0]) * 3600 + int(split_time[1]) * 60 + int(split_time[2])
 
 
-def extract_route_to_json(route_short_name='15', trips_json='trips.json', stops_location_json='stops_location.json'):
+def get_route_info(route_short_name='15'):
     """
     extract specific route from gtfs data
     :param route_short_name: default value is 15
-    :param trips_json: default value is trips.json
-    :param stops_location_json: default value is stops_location.json
     :return: trips and stops_location
     """
     connection = dbhelper.connect()
@@ -111,24 +108,7 @@ def extract_route_to_json(route_short_name='15', trips_json='trips.json', stops_
     trips_convert = {}
     for trip in trips.values():
         trips_convert[trip['stop_id'][0]] = trip
-    utils.dump_json(trips_convert, trips_json)
-    utils.dump_json(stops_location, stops_location_json)
-    return trips, stops_location
-
-
-def get_route_info(route_short_name='15', trips_json='trips.json', stops_location_json='stops_location.json'):
-    """
-    get route information(trips and stops) with specific route short name
-    :param route_short_name: default value is '15'
-    :param trips_json: default is 'trips.json'
-    :param stops_location_json: default is 'stops_location.json'
-    :return: trips and stops_location
-    """
-    if os.path.exists(trips_json) and os.path.exists(stops_location_json):
-        trips, stops_location = json.load(open(trips_json)), json.load(open(stops_location_json))
-    else:
-        trips, stops_location = extract_route_to_json(route_short_name, trips_json, stops_location_json)
-    return trips, stops_location
+    return trips_convert, stops_location
 
 
 def cal_distance(ne, cl):

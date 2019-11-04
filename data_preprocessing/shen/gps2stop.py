@@ -129,8 +129,11 @@ def main():
     def_trips_dir = home_dir + "processed/def_trips/" + bus_line_number + "/"
     gps_stop_trips_dir = home_dir + "processed/gps_stop_trips/" + bus_line_number + "/"
 
-    # check_order(gps_stop_trips_dir)
-    # check_boxplot(gps_stop_trips_dir)
+        if not os.path.exists(gps_stop_trips_dir):
+            # create if not exists
+            os.mkdir(gps_stop_trips_dir)
+        # check_order(gps_stop_trips_dir)
+        # check_boxplot(gps_stop_trips_dir)
 
     # 1. load defined trips with bus stops only
     def_trips = load_def_trips(def_trips_dir)

@@ -1,5 +1,5 @@
 import pandas
-from dbhelper import connect
+from data_preprocessing.dbhelper import connect
 
 
 if __name__ == '__main__':
@@ -9,8 +9,8 @@ if __name__ == '__main__':
     '''
     connector = connect()
     cursor = connector.cursor()
-    cursor.execute("select line_id, count(line_id) as count from busGPS group by line_id order by count desc;")
+    cursor.execute("select trajid, count(*) as count from busgps group by trajid order by trajid;")
     bus_line_count = cursor.fetchall()
     df = pandas.DataFrame(bus_line_count)
-    df.to_csv('count.csv', header=['line_id', 'count'], sep=',')
-
+    df.to_csv('count_RIO.csv', header=['line_id', 'count'], sep=',')
+    # df.to_csv('count.csv', header=['line_id', 'count'], sep=',')
