@@ -17,7 +17,7 @@ def load_gps(gps_path, columns, bus_line_number):
     :param bus_line_number: the bus line number you want to study
     :return: filtered dataframe
     """
-    df_gps = pd.read_csv(gps_path, names=columns)
+    df_gps = pd.read_csv(gps_path, names=columns, dtype={"line": str})
     return df_gps.loc[df_gps["line"] == bus_line_number, ["time", "lon", "lat", "vehicle", "vehicle_journey"]]
 
 
@@ -106,12 +106,13 @@ def split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info):
         new_group["dDistance"] = haversine(cur_loc, next_loc)
         small_groups = []
         if len(time_flags) > 0:
+            time_flags.append(new_group.shape[0])
             start = 0
             for i in time_flags:
-                df_tmp = new_group.iloc[start:i]
+                df_tmp = new_group.iloc[start:i].copy().reset_index(drop=True)
+                df_tmp.at[0, "dDistance"] = 0.0
                 small_groups.append(df_tmp)
                 start = i
-            small_groups.append(new_group[start:])
         else:
             small_groups = [new_group]
 
@@ -133,11 +134,13 @@ def split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info):
                         # direction matched when cosine is positive
                         gps_trip_name += ("_"+key)
                         dist, duration, _, od_loc = value
+                if not od_loc:
+                    continue
                 o_dist = haversine(od_loc[0], (first_loc["lat"], first_loc["lon"]))
                 d_dist = haversine(od_loc[1], (end_loc["lat"], end_loc["lon"]))
 
                 # step 4. remove trips that are too short, or too far from both ends.
-                if o_dist < dist/6.0 and d_dist < dist/6.0:
+                if o_dist < 300 and d_dist < 300:
                     #  the GPS points at both ends should be within 1/6 of total trip distance
                     group_time = each_group["dTime"].sum(skipna=True)
                     group_dist = each_group["dDistance"].sum(skipna=True)
@@ -154,19 +157,19 @@ def split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info):
 
 
 def main():
-    home_dir = "/Users/ruixinhua/Documents/BusGPS/BusGPS/"
+    home_dir = "/Users/shenwang/Documents/datasets/dublin_bus/"
     # input
-    bus_line_number = "15"
+    bus_line_number = "145"
     def_trips_dir = home_dir + "processed/def_trips/" + bus_line_number + "/"
     groupby_labels = ["vehicle", "vehicle_journey"]
     thresh_time = 900  # seconds
-    gps_path = home_dir + "gps/Nov2012/siri.20121121.csv"
+    gps_path = home_dir + "gps/Jan2013/siri.20130117.csv.gz"
     def_trips_info = get_def_trip_info(def_trips_dir)
     columns = ["time", "line", "direction", "journey_pattern", "date", "vehicle_journey", "operator", "congestion",
                "lon", "lat", "delay", "block", "vehicle", "stop", "at_stop"]
 
     # output
-    gps_trips_dir = home_dir + "processed/gps_trips/" + bus_line_number + "/"
+    gps_trips_dir = home_dir + "processed/gps_trips/Jan/" + bus_line_number + "/"
     if not os.path.exists(gps_trips_dir):
         # create if not exists
         os.mkdir(gps_trips_dir)
