@@ -3,8 +3,9 @@ import os
 import time
 
 import numpy as np
-import tensorflow as tf
+from tensorflow.losses import huber_loss
 from keras import optimizers
+from keras.initializers import glorot_normal
 from keras.layers import Dense, LSTM
 from keras.models import Sequential, load_model
 from sklearn.preprocessing import StandardScaler
@@ -22,7 +23,7 @@ def training(train_x, train_y):
     # set the parameters of sgd optimizer
     sgd = optimizers.SGD(lr=0.0001, momentum=0.95)
     model.compile(
-        loss=tf.losses.huber_loss,
+        loss=huber_loss,
         optimizer=sgd
     )
     # split the training set based on the length of trips
@@ -40,29 +41,26 @@ def training(train_x, train_y):
     np.random.shuffle(training_x_y)
     for value in training_x_y:
         trip_len = len(value["x"][-1])
-        epochs = max(1, min(int(max_len / 2 / trip_len), 5))
+        # add iterations
+        epochs = 5 if trip_len > 20 else 10
         print("Trip length:", trip_len)
         model.fit(np.array(value["x"]), np.array(value["y"]), epochs=epochs, batch_size=256)
     # lower the learning rate and train again
     sgd = optimizers.SGD(lr=0.00001, momentum=0.95)
     model.compile(
-        loss=tf.losses.huber_loss,
+        loss=huber_loss,
         optimizer=sgd
     )
     for value in training_x_y:
         trip_len = len(value["x"][-1])
         print("Trip length:", trip_len)
-        model.fit(np.array(value["x"]), np.array(value["y"]), epochs=2, batch_size=256)
+        model.fit(np.array(value["x"]), np.array(value["y"]), epochs=5, batch_size=128)
     return model
 
 
-def run_lstm(trips):
-    rnn_result = [["Model", "Trips Size", "Trips Length", "Training Time(s)", "Prediction Time(s)", "MAE", "MAPE", "RMSE"]]
-    # rnn_model_root_dir = home_dir + "model_training/lstm/" + bus_number + "/"
-    print("Test for trip length:", trips.shape[1])
+def normalize(trips, standard_scale):
     start_time = time.time()
     # normalize the aggregated time
-    standard_scale = StandardScaler(with_mean=True, with_std=True)
     trips_tmp = np.array(trips).reshape((-1, trips.shape[2]))
     agg_time = np.array(trips_tmp[..., -1]).reshape(-1, 1)
     agg_time = np.array(standard_scale.fit_transform(agg_time)).reshape(-1, trips.shape[1])
@@ -80,15 +78,10 @@ def run_lstm(trips):
     for trip in trips_test_x:
         test_x.extend(np.array([np.array(trip[:i]) for i in range(1, len(trip) + 1)]))
     print("Normalize target usage:", time.time() - start_time)
-    start_time = time.time()
-    # model_file = rnn_model_root_dir + "lstm{}".format(trips.shape[1]) + ".h5"
-    # training model
-    model = training(train_x, train_y)
-    training_time_used = time.time() - start_time
-    print("Time usage for training:", training_time_used)
-    trip_len = trips.shape[1] - 1
-    trips_test_x = np.array(
-        [np.array(test_x[i * trip_len:(i + 1) * trip_len]) for i in range(int(len(test_x) / trip_len) - 1)])
+    return train_x, train_y, test_x, test_y, trips_test_y
+
+
+def rnn_predict(model, trips_test_x, trip_len):
     # prediction begins
     start_time = time.time()
     predict_results = []
@@ -107,6 +100,16 @@ def run_lstm(trips):
         predict_results.append(predict_result)
     prediction_time_used = time.time() - start_time
     print("Time usage for prediction:", prediction_time_used)
+    return predict_results, prediction_time_used
+
+
+def write_to_csv(out_dir, data):
+    with open(out_dir, "w", encoding='utf-8') as csv_out:
+        cw = csv.writer(csv_out)
+        cw.writerows(data)
+
+
+def rnn_evaluation(predict_results, standard_scale, trips_test_y):
     # re-arrange the predict result
     predict_results_trip = np.array(
         [[result[i] for result in predict_results] for i in range(np.array(predict_results).shape[1])])
@@ -115,25 +118,46 @@ def run_lstm(trips):
         [np.append(result, [test], axis=0) for result, test in zip(predict_results_trip, trips_test_y)])
     # inverse predict result to origin scale
     predict_results = standard_scale.inverse_transform(predict_results)
+    # only stored the integer in the prediction file
     predict_results = np.array(np.round(predict_results), dtype=int)
     # evaluate the result
     MAE, MAPE, RMSE = evaluate(predict_results)
+    return MAE, MAPE, RMSE
+
+
+def run_lstm(trips):
+    # rnn_model_root_dir = home_dir + "model_training/lstm/" + bus_number + "/"
+    print("Test for trip length:", trips.shape[1])
+    standard_scale = StandardScaler(with_mean=True, with_std=True)
+    # get the normalised data, trips_test_y is the target data group by trip, it is used for prediction
+    train_x, train_y, test_x, test_y, trips_test_y = normalize(trips, standard_scale)
+    start_time = time.time()
+    # model_file = rnn_model_root_dir + "lstm{}".format(trips.shape[1]) + ".h5"
+    # training model
+    model = training(train_x, train_y)
+    training_time_used = time.time() - start_time
+    print("Time usage for training:", training_time_used)
+    trip_len = trips.shape[1] - 1
+    # group the x by trip
+    trips_test_x = np.array(
+        [np.array(test_x[i * trip_len:(i + 1) * trip_len]) for i in range(int(len(test_x) / trip_len) - 1)])
+    # prediction begins, and get the prediction results
+    predict_results, prediction_time_used = rnn_predict(model, trips_test_x, trip_len)
+    MAE, MAPE, RMSE = rnn_evaluation(predict_results, standard_scale, trips_test_y)
     rnn_result.append(
         ["LSTM RNN", len(trips), trips.shape[1], training_time_used, prediction_time_used, MAE, MAPE, RMSE])
     print("---Write data---")
     out_dir = result_dir + "Result{}.csv".format(trips.shape[1])
-    with open(out_dir, "w", encoding='utf-8') as csv_out:
-        cw = csv.writer(csv_out)
-        cw.writerows(rnn_result)
+    # write data format3 result file to result directory
+    write_to_csv(out_dir, rnn_result)
     model_predict_dir = rnn_output_dir + "{}/".format(trips.shape[1])
     if not os.path.exists(model_predict_dir):
         os.mkdir(model_predict_dir)
+    # write result to a file, the final result will stored in a single file
     for results in np.array(predict_results):
         global trip_test
-        with open(model_predict_dir + str(trip_test) + ".csv", "w", encoding='utf-8') as csv_out:
-            cw = csv.writer(csv_out)
-            cw.writerows(results)
-            trip_test += 1
+        write_to_csv(model_predict_dir + str(trip_test) + ".csv", results)
+        trip_test += 1
 
 
 def main():
@@ -155,4 +179,5 @@ if __name__ == "__main__":
     result_dir = home_dir + "result/"
     rnn_output_dir = home_dir + "pred_res/rnn/"
     bus_number = "46"
+    rnn_result = [["Model", "Trips Size", "Trips Length", "Training Time(s)", "Prediction Time(s)", "MAE", "MAPE", "RMSE"]]
     main()

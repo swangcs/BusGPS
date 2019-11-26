@@ -1,7 +1,4 @@
 import numpy as np
-import pickle
-from bus_prediction import kernel_predict
-from bus_evaluation import evaluate
 
 
 def training(training_sets):
