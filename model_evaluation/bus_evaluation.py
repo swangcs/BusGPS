@@ -1,18 +1,28 @@
 import numpy as np
 
 
-def evaluate(test_set_left, predict_set_left):
+def evaluate(pred_results):
     """
     calculate the sum of AE, APE and count for late calculation.
-    :param test_set_left: It only contains the unknown part of the whole test_set. If test_set is[0, 5, 10, 15,...,1500],
-    and it predicts from the third point, then test_set_left is [15,...,1500].
-    :param predict_set_left: It is the same as test_set_left.
-    :return: it returns the sum of absolute error and absolute percentage error along with prediction counts.
+    :param pred_results: It is the prediction sets with data format 3 which includes all test results
+    :return: it returns the mean of absolute error and absolute percentage error of this directory.
     """
-    test_set_left, predict_set_left = np.array(test_set_left), np.array(predict_set_left)
-    error = np.abs(test_set_left - predict_set_left)
-    absolute_error = np.sum(error)
-    absolute_per_error = np.sum(error / test_set_left)
-    predict_count = len(test_set_left)
-    return absolute_error, absolute_per_error, predict_count
-
+    MAE, MAPE, RMSE, count = 0, 0, 0, 0
+    N = len(pred_results)
+    for pred_result in pred_results:
+        rmse = 0
+        test_set = np.array(pred_result[-1])
+        K = len(test_set)
+        for l in range(len(pred_result) - 1):
+            if min(test_set[l + 1:]) <= 0.0:
+                continue
+            predict_set = pred_result[l][l + 1:]
+            error = np.abs(test_set[l + 1:] - predict_set)
+            rmse += np.sqrt(np.sum(error ** 2) / (K - l - 1))
+            MAE += np.sum(error)
+            MAPE += np.sum(error / test_set[l + 1:])
+            count += len(predict_set)
+        RMSE += rmse / (K - 1)
+    MAE, MAPE = MAE / count, MAPE / count
+    RMSE = RMSE / N
+    return MAE, MAPE, RMSE
