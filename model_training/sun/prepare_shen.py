@@ -205,7 +205,7 @@ def main():
     out_stops_dir = home_dir+"test_result/stop_trips/"+bus_number+"/"
 
     # Test for KNN model
-    time_predict, mae, mape, rmse = test_KNN('stops', 1000, root_meters_dir, root_stops_dir, out_meters_dir, out_stops_dir)
+    time_predict, mae, mape, rmse = test_KNN('stop', 100, root_meters_dir, root_stops_dir, out_meters_dir, out_stops_dir)
     print()
     print("Total predicting time is: ", time_predict)
     print("MAE is:", mae)

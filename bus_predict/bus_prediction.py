@@ -27,28 +27,37 @@ def kern(tl, tl_m, var, b=1):
     return np.exp(-np.sum((tl - tl_m) ** 2 / var) / b)
 
 
-def kernel_predict(test_set_known, training_sets, training_sets_variance):
+def kernel_predict(test_set_known, training_sets, kern_weight):
     """
     predict the left part time sequence using current test set and training sets with variance.
     :param test_set_known: it is only contain the part of test date that is known. eg:Given [0, 5, 15], and predicting
      left part using model.
     :param training_sets: the whole training sets. eg: [[0, 5, 15, ..., 1500],...,[0, 5, 15, ..., 1500]]
-    :param training_sets_variance: the variance of training sets. eg: [1, 100, 50, ..., 300]
+    :param kern_weight: the weight of training sets. eg: [1, 100, 50, ..., 300]
     :return: it contains the whole list, eg: predict set can be [0, 5, 15,...,1500]
     """
     test_set_known, training_sets = np.array(test_set_known), np.array(training_sets)
     tl, l = test_set_known, len(test_set_known)
     delta_time = (training_sets.T[l:] - training_sets.T[l - 1]).T
-    Tl_m = training_sets[..., :l]
-    kern_weight = np.array([kern(tl, tl_m, training_sets_variance[:l]) for tl_m in Tl_m])
     predict_set = np.append(tl, tl[-1] + np.sum(np.multiply(kern_weight[:, np.newaxis], delta_time), axis=0) / np.sum(kern_weight))
     return predict_set
 
-<<<<<<< Updated upstream
-=======
-def KNN_predict(test_set_down, training_set, training_sets_variance):
-
-def AMM_predict(test_set_down, training_set):
-
-def LR_predict(test_set_down, training)
->>>>>>> Stashed changes
+"""
+Old version of predict method
+"""
+# def kernel_predict(test_set_known, training_sets, training_sets_variance):
+#     """
+#     predict the left part time sequence using current test set and training sets with variance.
+#     :param test_set_known: it is only contain the part of test date that is known. eg:Given [0, 5, 15], and predicting
+#      left part using model.
+#     :param training_sets: the whole training sets. eg: [[0, 5, 15, ..., 1500],...,[0, 5, 15, ..., 1500]]
+#     :param training_sets_variance: the variance of training sets. eg: [1, 100, 50, ..., 300]
+#     :return: it contains the whole list, eg: predict set can be [0, 5, 15,...,1500]
+#     """
+#     test_set_known, training_sets = np.array(test_set_known), np.array(training_sets)
+#     tl, l = test_set_known, len(test_set_known)
+#     delta_time = (training_sets.T[l:] - training_sets.T[l - 1]).T
+#     Tl_m = training_sets[..., :l]
+#     kern_weight = np.array([kern(tl, tl_m, training_sets_variance[:l]) for tl_m in Tl_m])
+#     predict_set = np.append(tl, tl[-1] + np.sum(np.multiply(kern_weight[:, np.newaxis], delta_time), axis=0) / np.sum(kern_weight))
+#     return predict_set

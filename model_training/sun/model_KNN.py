@@ -1,6 +1,8 @@
 import math
 import operator
 import time
+import pickle
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import mean_absolute_error
 from scipy.spatial.distance import pdist
@@ -133,3 +135,4 @@ def KNN(y, count, direction):
     predict_time = round(time.time()-start, 4)
     print("The predicting time is:", predict_time)
     return results, predict_time
+

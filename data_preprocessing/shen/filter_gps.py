@@ -157,37 +157,38 @@ def split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info):
 
 
 def main():
-    home_dir = "/Users/shenwang/Documents/datasets/dublin_bus/"
-    # input
-    bus_line_number = "145"
-    def_trips_dir = home_dir + "processed/def_trips/" + bus_line_number + "/"
-    groupby_labels = ["vehicle", "vehicle_journey"]
-    thresh_time = 900  # seconds
-    gps_path = home_dir + "gps/Jan2013/siri.20130117.csv.gz"
-    def_trips_info = get_def_trip_info(def_trips_dir)
-    columns = ["time", "line", "direction", "journey_pattern", "date", "vehicle_journey", "operator", "congestion",
-               "lon", "lat", "delay", "block", "vehicle", "stop", "at_stop"]
+    for i in range(1):
+        home_dir = "/Users/letv/Desktop/IntelligentTraffic/datasets/"
+        # input
+        bus_line_number = "46"
+        def_trips_dir = home_dir + "processed/2012/def_trips/" + bus_line_number + "/"
+        groupby_labels = ["vehicle", "vehicle_journey"]
+        thresh_time = 900  # seconds
+        gps_path = home_dir + "gps/Nov2012/" + "siri.201211" + str('%02d' % (i + 25)) + ".csv"
+        def_trips_info = get_def_trip_info(def_trips_dir)
+        columns = ["time", "line", "direction", "journey_pattern", "date", "vehicle_journey", "operator", "congestion",
+                "lon", "lat", "delay", "block", "vehicle", "stop", "at_stop"]
 
-    # output
-    gps_trips_dir = home_dir + "processed/gps_trips/Jan/" + bus_line_number + "/"
-    if not os.path.exists(gps_trips_dir):
-        # create if not exists
-        os.mkdir(gps_trips_dir)
+        # output
+        gps_trips_dir = home_dir + "processed/2012/gps_trips/" + bus_line_number + "/" + str(201211) + str('%02d' % (i + 25)) + "/"
+        if not os.path.exists(gps_trips_dir):
+            # create if not exists
+            os.mkdir(gps_trips_dir)
 
-    time_1 = time.time()
-    print("\nStart loading GPS data file...")
-    df_gps = load_gps(gps_path, columns, bus_line_number)
-    time_2 = time.time()
-    print("\nGPS data successfully loaded!")
-    print("---- %s seconds ----" % (time_2 - time_1))
-    gps_trips = split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info)
-    time_3 = time.time()
-    print("\nGPS trips are successfully segmented!")
-    print("---- %s seconds ----" % (time_3 - time_2))
-    write_data(gps_trips, gps_trips_dir)
-    time_4 = time.time()
-    print("CSV files successfully written!")
-    print("---- %s seconds ----" % (time_4 - time_3))
+        time_1 = time.time()
+        print("\nStart loading GPS data file...")
+        df_gps = load_gps(gps_path, columns, bus_line_number)
+        time_2 = time.time()
+        print("\nGPS data successfully loaded!")
+        print("---- %s seconds ----" % (time_2 - time_1))
+        gps_trips = split_gps_trip(df_gps, groupby_labels, thresh_time, def_trips_info)
+        time_3 = time.time()
+        print("\nGPS trips are successfully segmented!")
+        print("---- %s seconds ----" % (time_3 - time_2))
+        write_data(gps_trips, gps_trips_dir)
+        time_4 = time.time()
+        print("CSV files successfully written!")
+        print("---- %s seconds ----" % (time_4 - time_3))
 
 
 if __name__ == '__main__':

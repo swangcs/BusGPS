@@ -123,11 +123,12 @@ def nearest_gps(gps_trips_dir, def_trips, gps_stop_trips_dir):
 
 
 def main():
-    home_dir = "/Users/shenwang/Documents/datasets/dublin_bus/"
-    bus_line_number = "145"
-    gps_trips_dir = home_dir + "processed/gps_trips/" + bus_line_number + "/"
-    def_trips_dir = home_dir + "processed/def_trips/" + bus_line_number + "/"
-    gps_stop_trips_dir = home_dir + "processed/gps_stop_trips/" + bus_line_number + "/"
+    for i in range(1):
+        home_dir = "/Users/letv/Desktop/IntelligentTraffic/datasets/"
+        bus_line_number = "46"
+        gps_trips_dir = home_dir + "processed/2012/gps_trips/" + bus_line_number + "/" + str(201211) + str('%02d' % (i + 25)) + "/"
+        def_trips_dir = home_dir + "processed/2012/def_trips/" + bus_line_number + "/"
+        gps_stop_trips_dir = home_dir + "processed/2012/gps_stop_trips/" + bus_line_number + "/" + str(201211) + str('%02d' % (i + 25)) + "/"
 
         if not os.path.exists(gps_stop_trips_dir):
             # create if not exists
@@ -135,11 +136,11 @@ def main():
         # check_order(gps_stop_trips_dir)
         # check_boxplot(gps_stop_trips_dir)
 
-    # 1. load defined trips with bus stops only
-    def_trips = load_def_trips(def_trips_dir)
+        # 1. load defined trips with bus stops only
+        def_trips = load_def_trips(def_trips_dir)
 
-    # 2. for each input gps_trip, output gps_stop_trip with the same file name
-    nearest_gps(gps_trips_dir, def_trips, gps_stop_trips_dir)
+        # 2. for each input gps_trip, output gps_stop_trip with the same file name
+        nearest_gps(gps_trips_dir, def_trips, gps_stop_trips_dir)
 
 
 if __name__ == '__main__':

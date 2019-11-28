@@ -122,13 +122,13 @@ def def_trip_gen(df_gtfs, bus_line_number):
 
 
 def main():
-    home_dir = "/Users/shenwang/Documents/datasets/dublin_bus/"
+    home_dir = "/Users/letv/Desktop/IntelligentTraffic/datasets/"
     # inputs
-    gtfs_dir = home_dir + "gtfs/20121129/"
+    gtfs_dir = home_dir + "gtfs/20130315/"
     bus_line_number = "46A"
 
     # output
-    def_trips_dir = home_dir + "processed/def_trips/" + bus_line_number + "/"
+    def_trips_dir = home_dir + "processed/2013/def_trips/" + bus_line_number + "/"
     if not os.path.exists(def_trips_dir):
         # create if not exists
         os.mkdir(def_trips_dir)
