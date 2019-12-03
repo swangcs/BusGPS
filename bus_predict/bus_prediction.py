@@ -12,6 +12,7 @@ def delay_predict(test_set_known, history_average):
     test_set_known = np.array(test_set_known)
     predict_set = np.append(test_set_known, test_set_known[-1] + history_average[len(test_set_known):]
                             - history_average[len(test_set_known) - 1])
+    predict_set = np.array(np.round(predict_set), dtype=np.int)
     return predict_set
 
 
@@ -40,6 +41,7 @@ def kernel_predict(test_set_known, training_sets, kern_weight):
     tl, l = test_set_known, len(test_set_known)
     delta_time = (training_sets.T[l:] - training_sets.T[l - 1]).T
     predict_set = np.append(tl, tl[-1] + np.sum(np.multiply(kern_weight[:, np.newaxis], delta_time), axis=0) / np.sum(kern_weight))
+    predict_set = np.array(np.round(predict_set), dtype=np.int)
     return predict_set
 
 """
