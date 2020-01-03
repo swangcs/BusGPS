@@ -3,7 +3,7 @@ import csv
 import time
 import math
 import numpy as np
-from final.models import delay, knn, kr, additive
+from models import delay, knn, kr, additive
 
 
 def load_data(home_dir):
@@ -118,10 +118,10 @@ def error_analysis(pred_dict, test_data):
 
 def error_analysis_additive(y_pred, y_test):
     abs_diff = np.abs(y_pred-y_test)
-    relative = np.divide(abs_diff, y_test, out=np.zeros_like(abs_diff), where=y_test!=0)
-    sq_diff = np.square(y_pred-y_test)
+    relative = np.divide(abs_diff, y_test, where=(y_test != 0))
+    sq_diff = np.square(abs_diff)
     print("MAE:", np.mean(abs_diff))
-    print("RMSE:", math.sqrt(np.sum(sq_diff))/sq_diff.shape[0])
+    print("RMSE:", math.sqrt(np.mean(sq_diff)))
     print("MAPE(%):", np.mean(relative)*100)
 
 
@@ -174,28 +174,28 @@ def main():
             error_analysis(pred_res, test_data)
             print("====== Group END ======")
 
-    # for traj_type in traj_type_group:
-    #     home_dir = "/Users/shenwang/Desktop/busgps/data/46_outbound_trips/" + traj_type + "/"
-    #     input_data_dir = home_dir + "input/"
-    #     full_data = load_data_additive(input_data_dir)
-    #     print("====== New Test ======")
-    #     print("Trajectory Type: ", traj_type)
-    #     for data_count in data_count_group:
-    #
-    #         train_data, test_data = split_data(full_data, data_count)
-    #
-    #         X_train, y_train = split_X_y(train_data)
-    #         X_test, y_test = split_X_y(test_data, train=False)
-    #
-    #         start_time = time.time()
-    #         bam = additive.train(X_train, y_train)
-    #         print("Training: ", time.time()-start_time)
-    #
-    #         start_time = time.time()
-    #         y_pred = additive.predict(bam, X_test)
-    #         print("Predicting: ", time.time()-start_time)
-    #         error_analysis_additive(y_pred, y_test)
-    #         print("====== Group END ======")
+    for traj_type in traj_type_group:
+        home_dir = "/Users/shenwang/Desktop/busgps/data/46_outbound_trips/" + traj_type + "/"
+        input_data_dir = home_dir + "input/"
+        full_data = load_data_additive(input_data_dir)
+        print("====== ADDITIVE MODEL ======")
+        print("Trajectory Type: ", traj_type)
+        for data_count in data_count_group:
+            print("Total Trips: ", data_count)
+            train_data, test_data = split_data(full_data, data_count)
+
+            X_train, y_train = split_X_y(train_data)
+            X_test, y_test = split_X_y(test_data, train=False)
+
+            start_time = time.time()
+            bam = additive.train(X_train, y_train)
+            print("Training: ", time.time()-start_time)
+
+            start_time = time.time()
+            y_pred = additive.predict(bam, X_test)
+            print("Predicting: ", time.time()-start_time)
+            error_analysis_additive(y_pred, y_test)
+            print("====== Group END ======")
 
 
 if __name__ == '__main__':
